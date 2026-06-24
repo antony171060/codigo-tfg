@@ -70,23 +70,24 @@ class Seq2SeqTrainedCRNN:
         teacher_forcing_ratio: float = 0.5,
     ) -> torch.Tensor:
         x, xl, y, yl = data
-        # y: (B, max_len) con <SOS> al inicio y <EOS> al final, relleno con <PAD>
+
+        x = x.float().to(self.device)
+        y = y.long().to(self.device)
+
         self.optimizer.zero_grad()
 
-        enc_out = self.model.encode(x)          # (B, T, enc_dim)
+        enc_out = self.model.encode(x)
         B = x.size(0)
         max_len = y.size(1)
 
         h, c = self.model.init_decoder_hidden(B, self.device)
-        token = y[:, 0]                         # primer token: <SOS>
+        token = y[:, 0]
         loss = 0
 
         for t in range(1, max_len):
             logit, h, c, _ = self.model.decode_step(token, h, c, enc_out)
-            # logit: (B, vocab_size)  |  y[:, t]: índice objetivo
             loss += self.criterion(logit, y[:, t])
-            # Teacher forcing: con probabilidad p usamos la etiqueta real,
-            # si no, el token predicho por el modelo
+
             use_teacher = random.random() < teacher_forcing_ratio
             token = y[:, t] if use_teacher else logit.argmax(dim=-1)
 

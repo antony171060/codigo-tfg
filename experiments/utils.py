@@ -41,9 +41,7 @@ os.makedirs(VOCAB_PATH, exist_ok=True)
 def check_and_retrieve_vocabulary(
     sax_type: str, encoding: str
 ) -> Tuple[Dict[str, int], Dict[int, str]]:
-    def make_vocabulary(
-        sax_type: str, encoding: str
-    ) -> Tuple[Dict[str, int], Dict[int, str]]:
+    def make_vocabulary(sax_type: str, encoding: str) -> Tuple[Dict[str, int], Dict[int, str]]:
         krn_parser = krnConverter(encoding=encoding)
 
         vocab = []
@@ -51,15 +49,21 @@ def check_and_retrieve_vocabulary(
             if (f.endswith(".krn") or f.endswith(".skm")) and not f.startswith("."):
                 f = os.path.join(DATASET_PATH, "krn", sax_type, f)
                 vocab.extend(krn_parser.convert(src_file=f))
+
         vocab = sorted(set(vocab))
+
+        special_tokens = ["<PAD>", "<SOS>", "<EOS>"]
 
         w2i = {}
         i2w = {}
-        for i, w in enumerate(vocab):
-            w2i[w] = i + 1
-            i2w[i + 1] = w
-        w2i["<PAD>"] = 0
-        i2w[0] = "<PAD>"
+
+        for i, token in enumerate(special_tokens):
+            w2i[token] = i
+            i2w[i] = token
+
+        for i, w in enumerate(vocab, start=len(special_tokens)):
+            w2i[w] = i
+            i2w[i] = w
 
         return w2i, i2w
 

@@ -58,7 +58,7 @@ def main():
     torch.cuda.empty_cache()
 
     # Run on GPU
-    device = torch.device("cpu")
+    device = torch.device("cuda")
 
     # Parse arguments
     args = parse_arguments()
